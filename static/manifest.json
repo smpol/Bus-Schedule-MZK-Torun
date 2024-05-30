@@ -1,0 +1,10 @@
+{
+  "name": "Tablica Odjazdów Toruń",
+  "short_name": "Tablica Odjazdów",
+  "theme_color": "#2196f3",
+  "background_color": "#e2e2e2",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/"
+}

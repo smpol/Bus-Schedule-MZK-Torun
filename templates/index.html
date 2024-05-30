@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <link rel="manifest" href="/manifest.json" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
+    <title>Tablica odjazdów Toruń</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"
+      integrity="sha512-6ZCLMiYwTeli2rVh3XAPxy3YoR5fVxGdH/pz+KMCzRY2M65Emgkw00Yqmhh8qLGeYQ3LbVZGdmOX9KUjSKr0TA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"
+      integrity="sha512-eYE5o0mD7FFys0tVot8r4AnRXzVVXhjVpzNK+AcHkg4zNLvUAaCOJyLFKjmfpJMj6L/tuCzMN7LULBvNDhy5pA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"
+      integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css"
+    />
+    <style>
+      #map {
+        height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <h1 class="text-center" style="padding-top: 1%">
+            Tablica odjazdów Toruń - MZK Toruń
+          </h1>
+          <p class="text-center">Wybierz przystanek z mapy</p>
+        </div>
+      </div>
+      <div class="card">
+        <h5 class="card-header">Mapa</h5>
+        <div class="card-body">
+          <div id="map" style="border-radius: 1%"></div>
+        </div>
+        <div class="card-footer">
+          <i class="text-center"
+            >Dane pochodzą z
+            <a class="text-center" href="http://sip.um.torun.pl:8080/"
+              >strony urzędu miasta Toruń</a
+            ></i
+          >
+        </div>
+      </div>
+    </div>
+    <script>
+      var map = L.map("map").setView(
+        [53.01300278043497, 18.588939878949823],
+        14
+      );
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors | Projekt autorstwa Michała Przysiężnego',
+        maxZoom: 19,
+      }).addTo(map);
+
+      L.control
+        .locate({
+          drawCircle: false,
+        })
+        .addTo(map);
+
+      var markers = L.markerClusterGroup();
+      var list_of_stop_with_live = [];
+
+      function getLive(id_point, id_live) {
+        //add to list_of_stop_with_live id_point and id_live
+        list_of_stop_with_live.push([id_point, id_live]);
+      }
+
+      //stops.csv have header stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,stop_url,location_type,parent_station
+      fetch("stops.txt")
+        .then((response) => response.text())
+        .then((data) => {
+          data.split("\n").forEach((row) => {
+            var row_splited = row.split(",");
+            var stop_id = row_splited[0];
+            var stop_code = row_splited[1];
+            var stop_name = row_splited[2];
+            var stop_lat = parseFloat(row_splited[4]);
+            var stop_lon = parseFloat(row_splited[5]);
+            if (!isNaN(stop_lat) && !isNaN(stop_lon)) {
+              var marker = L.marker([stop_lat, stop_lon]);
+              marker.bindPopup(
+                "<b>" +
+                  stop_name +
+                  "</b><br>" +
+                  "<a href='{{ url_for('rozklad') }}?id=" +
+                  stop_code +
+                  "'>Rozkład jazdy</a>"
+              );
+              markers.addLayer(marker);
+            }
+          });
+
+          // Add the markers layer to the map outside the forEach loop
+          map.addLayer(markers);
+        })
+        .catch((error) => console.error("Error loading stops.txt:", error));
+    </script>
+  </body>
+</html>

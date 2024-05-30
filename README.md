@@ -37,7 +37,7 @@ Project is _abandoned_
 
 ## Problem with the project
 
-Often the [website] (http://sip.um.torun.pl:8080/) does not work and there may be a problem that the project will not display the departure board.
+Often the [website](http://sip.um.torun.pl:8080/) does not work and there may be a problem that the project will not display the departure board.
 
 ## Up to date
 
